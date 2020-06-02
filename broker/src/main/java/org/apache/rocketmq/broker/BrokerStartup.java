@@ -48,6 +48,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.rocketmq.remoting.netty.TlsSystemConfig.TLS_ENABLE;
 
+/**
+ * 启动配置：
+ * 环境变量：ROCKETMQ_HOME=E:\workspace\rocketmq-study
+ *
+ * 启动的时候必须指明nameServer的地址
+ * brokerConfig.setNamesrvAddr("127.0.0.1:9876");
+ */
 public class BrokerStartup {
     public static Properties properties = null;
     public static CommandLine commandLine = null;
@@ -108,6 +115,8 @@ public class BrokerStartup {
             }
 
             final BrokerConfig brokerConfig = new BrokerConfig();
+            brokerConfig.setNamesrvAddr("127.0.0.1:9876"); // 启动的时候必须指明nameServer的地址
+
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
             final NettyClientConfig nettyClientConfig = new NettyClientConfig();
 
