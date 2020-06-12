@@ -338,6 +338,7 @@ public class RemotingCommand {
             length += body.length;
         }
 
+        // 申请一个长度为 length + header length + header data +body 大小的ByteBuffer
         ByteBuffer result = ByteBuffer.allocate(4 + length);
 
         // length
