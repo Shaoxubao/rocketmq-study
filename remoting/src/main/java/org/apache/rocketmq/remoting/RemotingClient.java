@@ -43,9 +43,11 @@ public interface RemotingClient extends RemotingService {
         throws InterruptedException, RemotingConnectException, RemotingTooMuchRequestException,
         RemotingTimeoutException, RemotingSendRequestException;
 
+    // 注册一个处理请求的处理器, 根据requestCode, 获取处理器,处理请求
     void registerProcessor(final int requestCode, final NettyRequestProcessor processor,
         final ExecutorService executor);
 
+    // 设置发送异步消息的线程池，如果不设置，则使用默认的
     void setCallbackExecutor(final ExecutorService callbackExecutor);
 
     ExecutorService getCallbackExecutor();
