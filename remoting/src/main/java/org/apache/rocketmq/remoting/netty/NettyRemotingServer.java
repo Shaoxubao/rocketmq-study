@@ -215,6 +215,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                     }
                 });
 
+        // 是否使用池化ByteBuf分配器
         if (nettyServerConfig.isServerPooledByteBufAllocatorEnable()) {
             childHandler.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
@@ -231,6 +232,9 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
             this.nettyEventExecutor.start();
         }
 
+        // 定时任务，用于扫描那些自己发出正在等待服务端响应（如broker
+        // 向NameSrv发出的请求）的请求，如果已经超时，则进行超时处理
+        // 扫描时间间隔为1秒/次
         this.timer.scheduleAtFixedRate(new TimerTask() {
 
             @Override
