@@ -82,6 +82,10 @@ import org.apache.rocketmq.remoting.exception.RemotingException;
 import org.apache.rocketmq.remoting.netty.NettyClientConfig;
 import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
+/**
+ * MQClientInstance 实例的功能是管理本实例中全部生产者与消费者的生产和消费行为。
+ *
+ */
 public class MQClientInstance {
     private final static long LOCK_TIMEOUT_MILLIS = 3000;
     private final InternalLogger log = ClientLogger.getLog();
@@ -89,12 +93,18 @@ public class MQClientInstance {
     private final int instanceIndex;
     private final String clientId;
     private final long bootTimestamp = System.currentTimeMillis();
+    // 当前client实例的全部生产者的内部实例
     private final ConcurrentMap<String/* group */, MQProducerInner> producerTable = new ConcurrentHashMap<String, MQProducerInner>();
+    // 当前client实例的全部消费者的内部实例
     private final ConcurrentMap<String/* group */, MQConsumerInner> consumerTable = new ConcurrentHashMap<String, MQConsumerInner>();
+    // 当前client实例的全部管理实例
     private final ConcurrentMap<String/* group */, MQAdminExtInner> adminExtTable = new ConcurrentHashMap<String, MQAdminExtInner>();
     private final NettyClientConfig nettyClientConfig;
+    // 其实每个client也是一个Netty Server，也会支持Broker访问，这里实现了全部client支持的接口
     private final MQClientAPIImpl mQClientAPIImpl;
+    // 管理接口的本地实现类
     private final MQAdminImpl mQAdminImpl;
+    // 当前生产者、消费者中全部Topic的本地缓存路由信息
     private final ConcurrentMap<String/* Topic */, TopicRouteData> topicRouteTable = new ConcurrentHashMap<String, TopicRouteData>();
     private final Lock lockNamesrv = new ReentrantLock();
     private final Lock lockHeartbeat = new ReentrantLock();
@@ -324,6 +334,9 @@ public class MQClientInstance {
         return clientId;
     }
 
+    /**
+     * 从多个Namesrv中获取最新Topic路由信息，更新本地缓存
+     */
     public void updateTopicRouteInfoFromNameServer() {
         Set<String> topicList = new HashSet<String>();
 
