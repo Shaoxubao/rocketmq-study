@@ -27,23 +27,30 @@ import org.apache.rocketmq.remoting.protocol.RemotingCommand;
 
 public interface RemotingServer extends RemotingService {
 
+    // 注册一个处理请求的处理器, 根据requestCode, 获取处理器,处理请求
     void registerProcessor(final int requestCode, final NettyRequestProcessor processor,
         final ExecutorService executor);
 
+    // 注册一个默认的处理器，当根据requestCode匹配不到处理器，则使用这个默认的处理器
     void registerDefaultProcessor(final NettyRequestProcessor processor, final ExecutorService executor);
 
+    // 获取端口
     int localListenPort();
 
+    // 根据requestCode获取请求处理器
     Pair<NettyRequestProcessor, ExecutorService> getProcessorPair(final int requestCode);
 
+    // 同步调用（同步发送消息）
     RemotingCommand invokeSync(final Channel channel, final RemotingCommand request,
         final long timeoutMillis) throws InterruptedException, RemotingSendRequestException,
         RemotingTimeoutException;
 
+    // 异步调用（异步发送消息）
     void invokeAsync(final Channel channel, final RemotingCommand request, final long timeoutMillis,
         final InvokeCallback invokeCallback) throws InterruptedException,
         RemotingTooMuchRequestException, RemotingTimeoutException, RemotingSendRequestException;
 
+    // 单向发送消息，只发送消息，不用处理发送的结果
     void invokeOneway(final Channel channel, final RemotingCommand request, final long timeoutMillis)
         throws InterruptedException, RemotingTooMuchRequestException, RemotingTimeoutException,
         RemotingSendRequestException;
