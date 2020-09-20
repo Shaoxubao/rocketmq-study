@@ -394,6 +394,13 @@ public abstract class NettyRemotingAbstract {
         }
     }
 
+
+    /**
+     * invokeOnewayImpl和invokeAsyncImpl有类似的地方，但是不需要处理回调。
+     * 而invokeSyncImpl和异步处理的区别在于，同步发送会在发送之后等待结果的返回：
+     * RemotingCommand responseCommand = responseFuture.waitResponse(timeoutMillis);
+     * 并且返回responseCommand，之后执行processSendResponse，返回发送结果。至此，整个发送流程结束。
+     */
     public RemotingCommand invokeSyncImpl(final Channel channel, final RemotingCommand request,
         final long timeoutMillis)
         throws InterruptedException, RemotingSendRequestException, RemotingTimeoutException {
@@ -415,7 +422,7 @@ public abstract class NettyRemotingAbstract {
 
                     responseTable.remove(opaque);
                     responseFuture.setCause(f.cause());
-                    responseFuture.putResponse(null);
+                    responseFuture.putResponse(null); // 释放锁
                     log.warn("send a request command to channel <" + addr + "> failed.");
                 }
             });

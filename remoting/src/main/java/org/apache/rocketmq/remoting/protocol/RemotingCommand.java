@@ -69,9 +69,11 @@ public class RemotingCommand {
         }
     }
 
-    private int code;
+    private int code; // 用于标示请求类型，参见RequestCode，ResponseCode
     private LanguageCode language = LanguageCode.JAVA;
     private int version = 0;
+    // RocketMQ每次发送同步请求前都会为一个request分配一个opaque，
+    // 原子自增的id，一个response会以opaque作为key保存在responseTable中，这样用opaque就将request和response连接起来了
     private int opaque = requestId.getAndIncrement();
     private int flag = 0;
     private String remark;
