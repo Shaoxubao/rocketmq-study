@@ -634,7 +634,7 @@ public class CommitLog {
         storeStatsService.getSinglePutMessageTopicTimesTotal(msg.getTopic()).incrementAndGet();
         storeStatsService.getSinglePutMessageTopicSizeTotal(topic).addAndGet(result.getWroteBytes());
 
-        handleDiskFlush(result, putMessageResult, msg);  // 处理刷盘
+        handleDiskFlush(result, putMessageResult, msg);  // 处理刷盘(异步或同步)
         handleHA(result, putMessageResult, msg);         // 主从同步
 
         return putMessageResult;
@@ -1135,6 +1135,8 @@ public class CommitLog {
                 }
             }
 
+            // 在关闭刷盘服务时，会执行Thread.sleep（10）等待所有的同步刷盘请求保存到刷盘请求队列中后，交换保存刷盘请求的队列，
+            // 再执行doCommit（）方法。
             // Under normal circumstances shutdown, wait for the arrival of the
             // request, and then flush
             try {
