@@ -1105,6 +1105,7 @@ public class CommitLog {
                             }
                         }
 
+                        // 唤醒同步刷盘等待线程
                         req.wakeupCustomer(flushOK);
                     }
 
