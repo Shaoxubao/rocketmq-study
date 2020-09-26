@@ -160,6 +160,9 @@ public class MappedFile extends ReferenceResource {
         ensureDirOK(this.file.getParent());
 
         try {
+            // 构建FileChannel，MappedByteBuffer
+            // 这两个类代表的是Mmap 这样的内存映射技术，Mmap 能够将文件直接映射到用户态的内存地址，
+            // 使得对文件的操作不再是 write/read，而转化为直接对内存地址的操作。
             this.fileChannel = new RandomAccessFile(this.file, "rw").getChannel();
             this.mappedByteBuffer = this.fileChannel.map(MapMode.READ_WRITE, 0, fileSize);
             TOTAL_MAPPED_VIRTUAL_MEMORY.addAndGet(fileSize);
@@ -271,6 +274,7 @@ public class MappedFile extends ReferenceResource {
      * @return The current flushed position
      */
     public int flush(final int flushLeastPages) {
+        // 判断是否需要进行刷盘 这里传0的话表示强制刷盘
         if (this.isAbleToFlush(flushLeastPages)) {
             if (this.hold()) {
                 int value = getReadPosition();
@@ -280,12 +284,14 @@ public class MappedFile extends ReferenceResource {
                     if (writeBuffer != null || this.fileChannel.position() != 0) {
                         this.fileChannel.force(false);
                     } else {
+                        // 直接用mappedByteBuffer刷盘
                         this.mappedByteBuffer.force();
                     }
                 } catch (Throwable e) {
                     log.error("Error occurred when force data to disk.", e);
                 }
 
+                // 设置刷盘指针
                 this.flushedPosition.set(value);
                 this.release();
             } else {
