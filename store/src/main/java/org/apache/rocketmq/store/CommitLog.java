@@ -61,6 +61,8 @@ public class CommitLog {
     private volatile long confirmOffset = -1L;
 
     private volatile long beginTimeInLock = 0;
+
+    // 默认为自旋锁，也可以通过useReentrantLockWhenPutMessage 进行配置、修改和使用ReentrantLock
     private final PutMessageLock putMessageLock;
 
     public CommitLog(final DefaultMessageStore defaultMessageStore) {
@@ -574,6 +576,7 @@ public class CommitLog {
             // global
             msg.setStoreTimestamp(beginLockTimestamp);
 
+            // 校验最后一个 MappedFile，如果结果为空或已写满，则新创建一个 MappedFile返回
             if (null == mappedFile || mappedFile.isFull()) {
                 mappedFile = this.mappedFileQueue.getLastMappedFile(0); // Mark: NewFile may be cause noise
             }
@@ -631,8 +634,8 @@ public class CommitLog {
         storeStatsService.getSinglePutMessageTopicTimesTotal(msg.getTopic()).incrementAndGet();
         storeStatsService.getSinglePutMessageTopicSizeTotal(topic).addAndGet(result.getWroteBytes());
 
-        handleDiskFlush(result, putMessageResult, msg);
-        handleHA(result, putMessageResult, msg);
+        handleDiskFlush(result, putMessageResult, msg);  // 处理刷盘
+        handleHA(result, putMessageResult, msg);         // 主从同步
 
         return putMessageResult;
     }
@@ -1183,6 +1186,13 @@ public class CommitLog {
             return msgStoreItemMemory;
         }
 
+        // （1）查找即将写入的消息物理Offset。
+        // （2）事务消息单独处理。这里主要处理Prepared类型和Rollback类型的消息，设置消息queueOffset为0。
+        // （3）序列化消息，并将序列化结果保存到ByteBuffer中（文件内存映射的Page Cache或 Direct Memory，简称 DM）。
+        //     特别地，如果将刷盘设置为异步刷盘，那么当ransientStorePoolEnable=true时，
+        //     会先写入DM，DM中的数据再异步写入文件内存映射的Page Cache中。
+        //     因为消费者始终是从Page Cache中读取消息消费的，所以这个机制也称为“读写分离”。
+        // （4）更新消息所在Queue的位点。
         public AppendMessageResult doAppend(final long fileFromOffset, final ByteBuffer byteBuffer, final int maxBlank,
             final MessageExtBrokerInner msgInner) {
             // STORETIMESTAMP + STOREHOSTADDRESS + OFFSET <br>
